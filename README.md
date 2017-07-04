@@ -10,6 +10,8 @@ Esse projeto está sendo desenvolvido com fins de aprendizado e testes das class
 Futuras modificações serão adicionadas a este repositório.
 
 ### Vídeo demonstrando o funcionamento deste projeto:
+> O vídeo abre na mesma aba, para abrir em uma nova aba, clique com o botão central do mouse </br>
+> ou clique com o botão direito e selecione "Abrir link em nova aba".
 
 [![Video demonstração](http://i.imgur.com/SDsuzFc.jpg)](https://www.youtube.com/watch?v=YDdGguGso4E)
 
