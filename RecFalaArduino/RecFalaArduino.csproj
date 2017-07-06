@@ -54,6 +54,8 @@
   <ItemGroup>
     <Compile Include="Arduino.cs" />
     <Compile Include="Frases.cs" />
+    <Compile Include="Funcoes.cs" />
+    <Compile Include="Graficos.cs" />
     <Compile Include="MinhasOrdens.cs" />
     <Compile Include="NumerosPorExtenso.cs" />
     <Compile Include="RecFalaArduino.cs" />

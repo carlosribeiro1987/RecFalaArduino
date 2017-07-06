@@ -9,12 +9,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace RecFalaArduino {
 
     class ReconhecimendoFalaArduino {
         private static SpeechRecognitionEngine engineVoz = new SpeechRecognitionEngine();
         private static SpeechSynthesizer synthVoz = new SpeechSynthesizer();
-        public enum Funcao { Nenhuma, DesligarPC, FecharAssistente };
+        public enum Funcao { Nenhuma, DesligarPC, FecharAssistente, FecharJanela };
         public static Funcao FuncaoAtiva = Funcao.Nenhuma;
         // bool Ouvindo = false;
         static void Main(string[] args) {
@@ -26,7 +27,8 @@ namespace RecFalaArduino {
             engineVoz = new SpeechRecognitionEngine(new System.Globalization.CultureInfo("pt-BR"));
             engineVoz.SetInputToDefaultAudioDevice();
             Console.Title = "Reconhecimento de Fala + Controle Arduino por voz - Carlos Ribeiro";
-            Console.WriteLine("\nIniciando...\n");
+            // Console.WriteLine("\n\tIniciando...\n");
+            Console.Write(Graficos.Caixa(new string[] { "RECONHECIMENTO DE FALA" }, 100));
             #endregion INICIANDO
 
             #region PREPARANDO O RECONHECIMENTO DE FALA
@@ -86,17 +88,17 @@ namespace RecFalaArduino {
             #endregion PREPARANDO RECONHECIMENTO DE FALA
 
             #region CARREGAR GRAMMAR
-            Console.Write("#############");
+          //  Console.Write("\t#############");
             engineVoz.LoadGrammar(g_conversas);
-            Console.Write("#############");
+        //    Console.Write("#############");
             engineVoz.LoadGrammar(g_comandosSistema);
-            Console.Write("#############");
+        //    Console.Write("#############");
             engineVoz.LoadGrammar(g_comandosArduino);
-            Console.Write("#############");
+        //    Console.Write("#############");
             engineVoz.LoadGrammar(g_loterias);
-            Console.Write("#############");
+       //     Console.Write("#############");
             engineVoz.LoadGrammar(g_confirmar);
-            Console.Write("#############\n\n");
+        //    Console.Write("#############\n\n");
 
             #endregion CARREGAR GRAMMAR
 
@@ -104,18 +106,13 @@ namespace RecFalaArduino {
             #region RECONHECIMENTO DE FALA
 
             do {
-                //try {
                 synthVoz.SelectVoiceByHints(VoiceGender.Male);
                 engineVoz.SpeechRecognized += ReconhecerVoz;
                 engineVoz.RecognizeAsync(RecognizeMode.Multiple);
                 Falar("Olá mestre, estou aqui para serví-lo. O que deseja?");
-                Console.WriteLine("\n\nEstou ouvindo. O que deseja?");
-                // Console.WriteLine(Respostas.ResultadoLoterias(Respostas.Loteria.MegaSena));
-                //  Console.WriteLine(Respostas.ResultadoLoterias(Respostas.Loteria.DuplaSena));
-                //}
-                //catch(Exception e) {
-                //    Console.WriteLine("Ocorreu um erro: " + e);
-                //}
+                Console.WriteLine("\n\n\tEstou ouvindo. O que deseja?");
+
+
 
                 Console.ReadKey();
             } while (!PodeFechar);
@@ -128,29 +125,29 @@ namespace RecFalaArduino {
                 string Confianca = string.Format("{0:#.##}%", e.Result.Confidence * 100);
                 switch (e.Result.Grammar.Name) {
                     case "grammarConversas":
-                        Console.WriteLine("\nCONVERSA...");
-                        Console.WriteLine(string.Format("Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        Console.Write("\n\t[ CONVERSA ALEATÓRIA ]");
+                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
                         ProcessarConversa(OrdemFalada);
                         break;
                     case "grammarComandosPC":
-                        Console.WriteLine("\nCOMANDO PC...");
-                        Console.WriteLine(string.Format("\nMinha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        Console.Write("\n\t[ COMANDO PC ]");
+                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
                         ProcessarComandoPC(OrdemFalada);
                         break;
                     case "grammarArduino":
-                        Console.WriteLine("\nCOMANDO ARDUINO...");
-                        Console.WriteLine(string.Format("Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        Console.Write("\n\t[ COMANDO ARDUINO ]");
+                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
                         ProcessarComandoArduino(OrdemFalada);
                         break;
                     case "grammarLoterias":
-                        Console.WriteLine("\nLOTERIAS...");
-                        Console.WriteLine(string.Format("Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        Console.Write("\n\t[ LOTERIAS ]");
+                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
                         ProcessarLoteria(OrdemFalada);
                         break;
                     case "grammarConfirmar":
                         if (e.Result.Confidence > 0.7) {
-                            Console.WriteLine("\nCONFIRMAÇÃO...");
-                            Console.WriteLine(string.Format("Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                            Console.Write("\n\t[ CONFIRMAÇÃO ]");
+                            Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
                             ProcessarConfirmacao(OrdemFalada);
                         }
                         break;
@@ -160,7 +157,7 @@ namespace RecFalaArduino {
 
             }
             else {
-                Console.WriteLine("\n\nCOMANDO NÃO RECONHECIDO!!!\nAmbiente ruidoso ou não há função implementada para o comando.");
+                Console.Write("\n\t[ COMANDO NÃO RECONHECIDO!!! ]\n");
             }
         }
 
@@ -189,7 +186,20 @@ namespace RecFalaArduino {
                 case "Feche essa janela":
                 case "Feche a janela":
                 case "Fechar janela":
-                    Falar("Desculpe-me venerável méstri, ainda não sei fechar janelas!"); //Falta implementar
+                    FuncaoAtiva = Funcao.FecharJanela;
+                    Falar("Tem certeza que deseja fechar a janela " + Funcoes.TituloJanelaAtiva()+"?");
+                    
+                    //Falar("Desculpe-me venerável méstri, ainda não sei fechar janelas!"); //Falta implementar
+                    break;
+                case "Qual é a janela ativa":
+                    Console.Write("\n\tJanela Ativa: " + Funcoes.TituloJanelaAtiva()+"\n");
+                    Falar("A janela ativa é: "+Funcoes.TituloJanelaAtiva());
+                    break;
+                case "Abrir Bloco de Notas":
+                    Funcoes.AbrirPrograma("notepad.exe");
+                    break;
+                case "Abrir Calculadora":
+                    Funcoes.AbrirPrograma("calc.exe");
                     break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
@@ -228,7 +238,7 @@ namespace RecFalaArduino {
                     if (Arduino.EnviarComando("L"))
                         Falar("Lâmpada acesa.");
                     else {
-                        Console.WriteLine("Não Foi possível acessar o Arduino.\nVerifique a conexão.");
+                        Console.Write("\n\t[ ERRO ] Não Foi possível acessar o Arduino. Verifique a conexão.");
                         Falar("Desculpe. Não foi possível acender a lâmpada");
                     }
                     break;
@@ -241,7 +251,7 @@ namespace RecFalaArduino {
                     if (Arduino.EnviarComando("D"))
                         Falar("Lâmpada apagada.");
                     else {
-                        Console.WriteLine("Não Foi possível acessar o Arduino.\nVerifique a conexão.");
+                        Console.Write("\n\t[ ERRO ] Não Foi possível acessar o Arduino. Verifique a conexão.");
                         Falar("Desculpe. Não foi possível apagar a lâmpada");
                     }
                     break;
@@ -255,11 +265,14 @@ namespace RecFalaArduino {
             switch (Ordem) {
                 case "Qual é o resultado da Lotofácil":
                     FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
-                    Console.WriteLine("\nTentando conexão com o site da Caixa...");
+                    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
                     Lotofacil lotofacil = new Lotofacil();
                     if (lotofacil.ObteveResultado) {
                         string Resultado = Respostas.SeparaStrArrays(lotofacil.ResultadoArray);
-                        Console.WriteLine("\nResultado da Lotofácil:\n" + Resultado);
+                       // Console.Write("\n\tResultado da Lotofácil:\n\t[ " + Resultado + " ]\n");
+                        Console.Write(Graficos.Caixa("LOTOFÁCIL", Respostas.SeparaStrArrays(lotofacil.ResultadoArray, 5)));
+                        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(lotofacil.Concurso));
+                        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(lotofacil.DataSorteio.Date));
 
                         Falar(string.Format("Os números do último concurso da Lotofácil, sorteados {0} foram: {1}", Frases.Data(lotofacil.DataSorteio), Resultado));
                     }
@@ -270,20 +283,21 @@ namespace RecFalaArduino {
                     break;
                 case "Qual é o resultado da Mega Sena":
                     FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
-                    Console.WriteLine("\nTentando conexão com o site da Caixa...");
+                    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
                     MegaSena megasena = new MegaSena();
                     if (megasena.ObteveResultado) {
-                        Console.WriteLine("\n" + Respostas.SeparaStrArrays(megasena.ResultadoArray));
-                        //Console.WriteLine("\n" + Respostas.Loteria.MegaSena);
-                        Falar(string.Format("Os números do último concurso da Mega-Sena, sorteados {0} foram: {1}",
-                                              Frases.Data(megasena.DataSorteio), megasena.ResultadoString.Replace(" ", ", ")));
+                        string Resultado = Respostas.SeparaStrArrays(megasena.ResultadoArray);
+                        Console.Write(Graficos.Caixa("MEGA SENA", Respostas.SeparaStrArrays(megasena.ResultadoArray, 6)));
+                        Falar(string.Format("Os números do último concurso da Mega-Sena, sorteados {0} foram: {1}", Frases.Data(megasena.DataSorteio), Resultado));
+                        
+                        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(megasena.Concurso));
+                        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(megasena.DataSorteio.Date));
                     }
                     else {
-                        Console.WriteLine("\nNão foi possível acessar o site da Caixa.");
-                        Falar("Desculpe-me méstri. Não consegui acessar o resultado.");
+                        Console.WriteLine("\n\t[ ERRO ] Não foi possível acessar o site da Caixa.");
+                        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
 
                     }
-                    //  Falar(Respostas.ResultadoLoterias(Respostas.Loteria.MegaSena));
                     break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido méstrih?");
@@ -293,6 +307,9 @@ namespace RecFalaArduino {
         public static void ProcessarConfirmacao(string Ordem) {
             switch (Ordem) {
                 case "Sim":
+                case "Tenho":
+                case "Pode Fechar":
+                case "Ok":
                     switch (FuncaoAtiva) {
                         case Funcao.DesligarPC:
                             Falar("Entendi. Vou desligar o computador.");
@@ -302,12 +319,25 @@ namespace RecFalaArduino {
                             FalarCompleto("Ok. Até mais mestre, foi uma honra serví-lo.");
                             Environment.Exit(0);
                             break;
+                        case Funcao.FecharJanela:
+                            string janAtiva = Funcoes.TituloJanelaAtiva();
+                            if (Funcoes.FecharJanela()) {
+                                Console.WriteLine("\n\tJanela Fechada: " + janAtiva);
+                                Falar("Janela Fechada");
+                                FuncaoAtiva = Funcao.Nenhuma;
+                            }
+                            else {
+                                Console.Write("[ AVISO ] Nenhuma janela ativa!");
+                                Falar("Não há nenhuma janela ativa");
+                            }
+                            break;
                         default:
-                            Console.WriteLine("\nNenhuma função ativa!");
+                            Console.Write("\n\t[ AVISO ] Nenhuma função ativa!");
                             break;
                     }
                     break;
                 case "Não":
+                case "Cancelar":
                     switch (FuncaoAtiva) {
                         case Funcao.DesligarPC:
                             Falar("Ok. Não vou desligar o PC");
@@ -315,6 +345,10 @@ namespace RecFalaArduino {
                             break;
                         case Funcao.FecharAssistente:
                             Falar("Ok. É uma honra continuar a serví-lo, querido mestre.");
+                            break;
+                        case Funcao.FecharJanela:
+                            Falar("Ok. Não vou fechar a janela.");
+                            FuncaoAtiva = Funcao.Nenhuma;
                             break;
                         default:
                             Console.WriteLine("\nNenhuma função ativa");
@@ -342,7 +376,6 @@ namespace RecFalaArduino {
 
         private static void AbrirJanela(Form Janela) {
             Application.Run(Janela);
-
         }
     }
 }

@@ -25,7 +25,6 @@ namespace RecFalaArduinoe {
 
             string strValor = String.Empty;
             strValor = valor.ToString("000000000000000.00#");
-            //strValor = valor.ToString("{0:0.00#}");
             string valor_por_extenso = string.Empty;
             int qtdCasasDecimais =
                 strValor.Substring(strValor.IndexOf(',') + 1, strValor.Length - (strValor.IndexOf(',') + 1)).Length;
@@ -40,55 +39,31 @@ namespace RecFalaArduinoe {
                 valor_por_extenso += escreva_parte(Convert.ToDecimal(parte));
                 if (i == 0 & valor_por_extenso != string.Empty) {
                     if (Convert.ToInt32(strValor.Substring(0, 3)) == 1)
-                        valor_por_extenso += " TRILHÃO" +
-                                             ((Convert.ToDecimal(strValor.Substring(3, 12)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " TRILHÃO" + ((Convert.ToDecimal(strValor.Substring(3, 12)) > 0) ? " E " : string.Empty);
                     else if (Convert.ToInt32(strValor.Substring(0, 3)) > 1)
-                        valor_por_extenso += " TRILHÕES" +
-                                             ((Convert.ToDecimal(strValor.Substring(3, 12)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " TRILHÕES" + ((Convert.ToDecimal(strValor.Substring(3, 12)) > 0) ? " E " : string.Empty);
                 }
                 else if (i == 3 & valor_por_extenso != string.Empty) {
                     if (Convert.ToInt32(strValor.Substring(3, 3)) == 1)
-                        valor_por_extenso += " BILHÃO" +
-                                             ((Convert.ToDecimal(strValor.Substring(6, 9)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " BILHÃO" + ((Convert.ToDecimal(strValor.Substring(6, 9)) > 0) ? " E " : string.Empty);
                     else if (Convert.ToInt32(strValor.Substring(3, 3)) > 1)
-                        valor_por_extenso += " BILHÕES" +
-                                             ((Convert.ToDecimal(strValor.Substring(6, 9)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " BILHÕES" + ((Convert.ToDecimal(strValor.Substring(6, 9)) > 0) ? " E " : string.Empty);
                 }
                 else if (i == 6 & valor_por_extenso != string.Empty) {
                     if (Convert.ToInt32(strValor.Substring(6, 3)) == 1)
-                        valor_por_extenso += " MILHÃO" +
-                                             ((Convert.ToDecimal(strValor.Substring(9, 6)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " MILHÃO" + ((Convert.ToDecimal(strValor.Substring(9, 6)) > 0) ? " E " : string.Empty);
                     else if (Convert.ToInt32(strValor.Substring(6, 3)) > 1)
-                        valor_por_extenso += " MILHÕES" +
-                                             ((Convert.ToDecimal(strValor.Substring(9, 6)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " MILHÕES" + ((Convert.ToDecimal(strValor.Substring(9, 6)) > 0) ? " E " : string.Empty);
                 }
                 else if (i == 9 & valor_por_extenso != string.Empty)
                     if (Convert.ToInt32(strValor.Substring(9, 3)) > 0)
-                        valor_por_extenso += " MIL" +
-                                             ((Convert.ToDecimal(strValor.Substring(12, 3)) > 0)
-                                                  ? " E "
-                                                  : string.Empty);
+                        valor_por_extenso += " MIL" + ((Convert.ToDecimal(strValor.Substring(12, 3)) > 0) ? " E " : string.Empty);
 
                 if (i == 12) {
                     if (valor_por_extenso.Length > 8)
-                        if (valor_por_extenso.Substring(valor_por_extenso.Length - 6, 6) == "BILHÃO" |
-                            valor_por_extenso.Substring(valor_por_extenso.Length - 6, 6) == "MILHÃO")
+                        if (valor_por_extenso.Substring(valor_por_extenso.Length - 6, 6) == "BILHÃO" | valor_por_extenso.Substring(valor_por_extenso.Length - 6, 6) == "MILHÃO")
                             valor_por_extenso += " DE";
-                        else if (valor_por_extenso.Substring(valor_por_extenso.Length - 7, 7) == "BILHÕES" |
-                                 valor_por_extenso.Substring(valor_por_extenso.Length - 7, 7) == "MILHÕES" |
-                                 valor_por_extenso.Substring(valor_por_extenso.Length - 8, 7) == "TRILHÕES")
+                        else if (valor_por_extenso.Substring(valor_por_extenso.Length - 7, 7) == "BILHÕES" | valor_por_extenso.Substring(valor_por_extenso.Length - 7, 7) == "MILHÕES" | valor_por_extenso.Substring(valor_por_extenso.Length - 8, 7) == "TRILHÕES")
                             valor_por_extenso += " DE";
                         else if (valor_por_extenso.Substring(valor_por_extenso.Length - 8, 8) == "TRILHÕES")
                             valor_por_extenso += " DE";
@@ -157,7 +132,6 @@ namespace RecFalaArduinoe {
                                 throw new ArgumentOutOfRangeException("tipoValorExtenso");
                         }
                     }
-
                     else if (Convert.ToInt32(strValor.Substring(16, qtdCasasDecimais)) > 1) {
                         switch (tipoValorExtenso) {
                             case TipoValorExtenso.Monetario:

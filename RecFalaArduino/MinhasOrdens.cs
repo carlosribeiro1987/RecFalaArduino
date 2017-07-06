@@ -13,7 +13,11 @@ namespace RecFalaArduino {
         #region COMANDOS EXECUTADOS NO COMPUTADOR
         public static string[] Confirmar = {
             "Sim",
-            "Não"
+            "Não",
+            "Pode Fechar",
+            "Tenho",
+            "Cancelar",
+            "Ok"
         };
         public static string[] Comandos = {
             "Que horas são",
@@ -22,7 +26,12 @@ namespace RecFalaArduino {
             "Desligar computador",
             "Desligar PC",
             "Desligue o PC",
-
+            "Abrir Calculadora",
+            "Abrir Bloco de Notas",
+            "Qual é a janela ativa",
+            "Feche essa janela",
+            "Feche a janela",
+            "Fechar janela",
             "Sair",
 
         };

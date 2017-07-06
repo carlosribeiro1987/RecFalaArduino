@@ -162,5 +162,21 @@ namespace ClassesAssistente {
             }
             return NomeDiaSemana;
         }
+        public static string Saudacao() {
+            int hora = DateTime.Now.Hour;
+            if (hora <= 5)
+                return "Olá ";
+            else if (hora < 12)
+                return "Bom Dia ";
+            else if (hora < 18)
+                return "Boa Tarde ";
+            else
+                return "Boa Noite ";
+        }
+
+        //public static string Desperdida() {
+
+
+        //}
     }
 }

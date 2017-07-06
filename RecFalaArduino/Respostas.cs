@@ -18,13 +18,13 @@ namespace RecFalaArduino {
 
             for (int i = 0; i < StrArray.Length; i++) {
                 string atual = StrArray[i];
-                if (i == StrArray.Length - 1) 
+                if (i == StrArray.Length - 1)
                     temp = string.Format("{0} e {1}", temp, atual);
                 else {
                     if (i > 0)
                         temp = string.Format("{0}, {1}", temp, atual);
                     else
-                        temp = atual;//string.Format("{0}", atual);                    
+                        temp = atual;
                 }
             }
 
@@ -32,6 +32,33 @@ namespace RecFalaArduino {
 
             return Retorno;
         }
+
+        public static string[] SeparaStrArrays(string[] StrArray, int ItemsPorLinha) {
+            int numLinhas = StrArray.Length / ItemsPorLinha;
+            string[] Retorno = new string[numLinhas];
+            string temp = string.Empty;
+            int cont = 0;
+            int linha = 0;
+
+            while (cont < StrArray.Length) {
+                for (int i = 0; i < ItemsPorLinha; i++) {
+                    if (i < ItemsPorLinha) {
+                        temp += StrArray[cont] + " ";
+                        cont++;
+                    }
+                    else {
+                        temp += StrArray[cont];
+                        cont++;
+                    }
+                }
+                Retorno[linha] = temp;
+                linha++;
+                temp = "";
+            }
+            //Retorno = temp;
+                        
+            return Retorno;
+        }
     }
-    
+
 }
