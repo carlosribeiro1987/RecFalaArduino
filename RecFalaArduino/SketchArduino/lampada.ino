@@ -1,4 +1,4 @@
-#define rele 13
+#define releLampada 13
 
 char leitura;
 

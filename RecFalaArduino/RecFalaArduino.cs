@@ -17,6 +17,8 @@ namespace RecFalaArduino {
         private static SpeechSynthesizer synthVoz = new SpeechSynthesizer();
         public enum Funcao { Nenhuma, DesligarPC, FecharAssistente, FecharJanela };
         public static Funcao FuncaoAtiva = Funcao.Nenhuma;
+        public static ConsoleColor CorFundoConsole = Console.BackgroundColor;
+        public static ConsoleColor CorFonteConsole = Console.ForegroundColor;
         // bool Ouvindo = false;
         static void Main(string[] args) {
             bool PodeFechar = false;
@@ -125,29 +127,29 @@ namespace RecFalaArduino {
                 string Confianca = string.Format("{0:#.##}%", e.Result.Confidence * 100);
                 switch (e.Result.Grammar.Name) {
                     case "grammarConversas":
-                        Console.Write("\n\t[ CONVERSA ALEATÓRIA ]");
-                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        FraseColorida("\n\t[ CONVERSA ALEATÓRIA ]", ConsoleColor.DarkGreen);
+                        FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                         ProcessarConversa(OrdemFalada);
                         break;
                     case "grammarComandosPC":
-                        Console.Write("\n\t[ COMANDO PC ]");
-                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        FraseColorida("\n\t[ COMANDO PC ]", ConsoleColor.DarkGreen);
+                        FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                         ProcessarComandoPC(OrdemFalada);
                         break;
                     case "grammarArduino":
-                        Console.Write("\n\t[ COMANDO ARDUINO ]");
-                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        FraseColorida("\n\t[ COMANDO ARDUINO ]", ConsoleColor.DarkGreen);
+                        FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                         ProcessarComandoArduino(OrdemFalada);
                         break;
                     case "grammarLoterias":
-                        Console.Write("\n\t[ LOTERIAS ]");
-                        Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                        FraseColorida("\n\t[ LOTERIAS ]", ConsoleColor.DarkGreen);
+                        FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                         ProcessarLoteria(OrdemFalada);
                         break;
                     case "grammarConfirmar":
                         if (e.Result.Confidence > 0.7) {
-                            Console.Write("\n\t[ CONFIRMAÇÃO ]");
-                            Console.Write(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca));
+                            FraseColorida("\n\t[ CONFIRMAÇÃO ]", ConsoleColor.DarkGreen);
+                            FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                             ProcessarConfirmacao(OrdemFalada);
                         }
                         break;
@@ -157,7 +159,7 @@ namespace RecFalaArduino {
 
             }
             else {
-                Console.Write("\n\t[ COMANDO NÃO RECONHECIDO!!! ]\n");
+                FraseColorida("\n\tAVISO: Comando não reconhecido!\n", ConsoleColor.Yellow);
             }
         }
 
@@ -177,6 +179,7 @@ namespace RecFalaArduino {
                 case "Desligue o PC":
                     FuncaoAtiva = Funcao.DesligarPC;
                     Falar("Tem certeza que quer desligar o computador?");
+                    FraseColorida("DESLIGAR O COMPUTADOR?", ConsoleColor.Red, ConsoleColor.Yellow);
                     break;
                 case "Sair":
                     FuncaoAtiva = Funcao.FecharAssistente;
@@ -187,9 +190,7 @@ namespace RecFalaArduino {
                 case "Feche a janela":
                 case "Fechar janela":
                     FuncaoAtiva = Funcao.FecharJanela;
-                    Falar("Tem certeza que deseja fechar a janela " + Funcoes.TituloJanelaAtiva()+"?");
-                    
-                    //Falar("Desculpe-me venerável méstri, ainda não sei fechar janelas!"); //Falta implementar
+                    Falar("Tem certeza que deseja fechar a janela " + Funcoes.TituloJanelaAtiva()+"?");                   
                     break;
                 case "Qual é a janela ativa":
                     Console.Write("\n\tJanela Ativa: " + Funcoes.TituloJanelaAtiva()+"\n");
@@ -200,6 +201,10 @@ namespace RecFalaArduino {
                     break;
                 case "Abrir Calculadora":
                     Funcoes.AbrirPrograma("calc.exe");
+                    break;
+                case "Limpar Janela":
+                case "Limpar Mensagens":
+                    LimparConsole();
                     break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
@@ -238,7 +243,7 @@ namespace RecFalaArduino {
                     if (Arduino.EnviarComando("L"))
                         Falar("Lâmpada acesa.");
                     else {
-                        Console.Write("\n\t[ ERRO ] Não Foi possível acessar o Arduino. Verifique a conexão.");
+                        FraseColorida("\n\tERRO: Não Foi possível acessar o Arduino. Verifique a conexão.", ConsoleColor.Red);
                         Falar("Desculpe. Não foi possível acender a lâmpada");
                     }
                     break;
@@ -251,7 +256,7 @@ namespace RecFalaArduino {
                     if (Arduino.EnviarComando("D"))
                         Falar("Lâmpada apagada.");
                     else {
-                        Console.Write("\n\t[ ERRO ] Não Foi possível acessar o Arduino. Verifique a conexão.");
+                        FraseColorida("\n\tERRO: Não Foi possível acessar o Arduino. Verifique a conexão.", ConsoleColor.Red);
                         Falar("Desculpe. Não foi possível apagar a lâmpada");
                     }
                     break;
@@ -263,42 +268,67 @@ namespace RecFalaArduino {
 
         public static void ProcessarLoteria(string Ordem) {
             switch (Ordem) {
+                //LOTOFÁCIL
                 case "Qual é o resultado da Lotofácil":
                     FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
-                    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
                     Lotofacil lotofacil = new Lotofacil();
                     if (lotofacil.ObteveResultado) {
                         string Resultado = Respostas.SeparaStrArrays(lotofacil.ResultadoArray);
-                       // Console.Write("\n\tResultado da Lotofácil:\n\t[ " + Resultado + " ]\n");
-                        Console.Write(Graficos.Caixa("LOTOFÁCIL", Respostas.SeparaStrArrays(lotofacil.ResultadoArray, 5)));
-                        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(lotofacil.Concurso));
-                        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(lotofacil.DataSorteio.Date));
+                        // Console.Write("\n\tResultado da Lotofácil:\n\t[ " + Resultado + " ]\n");
+                        FraseColorida(Graficos.Caixa("LOTOFÁCIL", Respostas.SeparaStrArrays(lotofacil.ResultadoArray, 5)), ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(lotofacil.Concurso)+"\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(lotofacil.DataSorteio.Date).Substring(0, 10)+"\n", ConsoleColor.Cyan);
 
                         Falar(string.Format("Os números do último concurso da Lotofácil, sorteados {0} foram: {1}", Frases.Data(lotofacil.DataSorteio), Resultado));
                     }
                     else {
-                        Console.WriteLine("\nNão foi possível acessar o site da Caixa.");
+                        FraseColorida("\nERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
                         Falar("Desculpe-me méstri. Não consegui acessar o resultado.");
                     }
                     break;
+                //MEGA SENA
                 case "Qual é o resultado da Mega Sena":
                     FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
-                    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
                     MegaSena megasena = new MegaSena();
                     if (megasena.ObteveResultado) {
                         string Resultado = Respostas.SeparaStrArrays(megasena.ResultadoArray);
-                        Console.Write(Graficos.Caixa("MEGA SENA", Respostas.SeparaStrArrays(megasena.ResultadoArray, 6)));
+                        FraseColorida(Graficos.Caixa("MEGA SENA", Respostas.SeparaStrArrays(megasena.ResultadoArray, 6)), ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(megasena.Concurso)+"\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(megasena.DataSorteio).Substring(0, 10)+"\n", ConsoleColor.Cyan);
                         Falar(string.Format("Os números do último concurso da Mega-Sena, sorteados {0} foram: {1}", Frases.Data(megasena.DataSorteio), Resultado));
                         
-                        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(megasena.Concurso));
-                        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(megasena.DataSorteio.Date));
+                        
                     }
                     else {
-                        Console.WriteLine("\n\t[ ERRO ] Não foi possível acessar o site da Caixa.");
+                        FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
                         Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
 
                     }
                     break;
+                //case "Qual é o resultado da Lotomania":
+                //case "Fale o resultado da Lotomania":
+                //case "Me diz o resultado da Lotomania":
+                //case "Me diga o resultado da Lotomania":
+                //case "Diga-me o resultado da Lotomania":
+                //    FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
+                //    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
+                //    LotoMania lotomania = new LotoMania();
+                //    if (lotomania.ObteveResultado) {
+                //        string Resultado = Respostas.SeparaStrArrays(lotomania.ResultadoArray);
+                //        Console.Write(Graficos.Caixa("LOTOMANIA", Respostas.SeparaStrArrays(lotomania.ResultadoArray, 5)));
+                //        Falar(string.Format("Os números do último concurso da Loto Mania, sorteados {0} foram: {1}", Frases.Data(lotomania.DataSorteio), Resultado));
+
+                //        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(lotomania.Concurso));
+                //        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(lotomania.DataSorteio.Date));
+                //    }
+                //    else {
+                //        Console.WriteLine("\n\t[ ERRO ] Não foi possível acessar o site da Caixa.");
+                //        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
+
+                //    }
+                //    break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido méstrih?");
                     break;
@@ -322,17 +352,17 @@ namespace RecFalaArduino {
                         case Funcao.FecharJanela:
                             string janAtiva = Funcoes.TituloJanelaAtiva();
                             if (Funcoes.FecharJanela()) {
-                                Console.WriteLine("\n\tJanela Fechada: " + janAtiva);
+                                FraseColorida("\n\tJanela Fechada: " + janAtiva, ConsoleColor.DarkYellow);
                                 Falar("Janela Fechada");
                                 FuncaoAtiva = Funcao.Nenhuma;
                             }
                             else {
-                                Console.Write("[ AVISO ] Nenhuma janela ativa!");
+                                Console.Write("AVISO: Nenhuma janela ativa!");
                                 Falar("Não há nenhuma janela ativa");
                             }
                             break;
                         default:
-                            Console.Write("\n\t[ AVISO ] Nenhuma função ativa!");
+                            FraseColorida("\n\tAVISO: Nenhuma função ativa.\n", ConsoleColor.Yellow);
                             break;
                     }
                     break;
@@ -351,7 +381,7 @@ namespace RecFalaArduino {
                             FuncaoAtiva = Funcao.Nenhuma;
                             break;
                         default:
-                            Console.WriteLine("\nNenhuma função ativa");
+                            FraseColorida("\n\tAVISO: Nenhuma função ativa.\n", ConsoleColor.Yellow);
                             FuncaoAtiva = Funcao.Nenhuma;
                             break;
                     }
@@ -376,6 +406,22 @@ namespace RecFalaArduino {
 
         private static void AbrirJanela(Form Janela) {
             Application.Run(Janela);
+        }
+
+        private static void FraseColorida(string Frase, ConsoleColor CorLetra = ConsoleColor.Green, ConsoleColor CorFundo = ConsoleColor.Black) {
+            ConsoleColor CorLetraTemp = Console.ForegroundColor;
+            ConsoleColor CorFundoTemp = Console.BackgroundColor;
+            Console.ForegroundColor = CorLetra;
+            Console.BackgroundColor = CorFundo;
+            Console.Write(Frase);
+            Console.ForegroundColor = CorLetraTemp;
+            Console.BackgroundColor = CorFundoTemp;
+
+        }
+
+        private static void LimparConsole() {
+            Console.Clear();
+            Console.Write(Graficos.Caixa(new string[] { "RECONHECIMENTO DE FALA" }, 100));
         }
     }
 }

@@ -20,6 +20,8 @@ namespace RecFalaArduino {
             "Ok"
         };
         public static string[] Comandos = {
+            "Limpar Janela",
+            "Limpar Mensagens",
             "Que horas são",
             "Que dia é hoje",
             "Desligue o computador",
