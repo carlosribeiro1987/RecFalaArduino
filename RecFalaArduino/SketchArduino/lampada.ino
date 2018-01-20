@@ -4,11 +4,12 @@ char leitura;
 
 void setup()
 {
-
-  //Inicializa comunicação Serial
-  Serial.begin(9600);
   //Seta o pino indicado por rele como saída
   pinMode(releLampada, OUTPUT);
+  //Muda o status do pino associado ao relé para LOW	
+  digitalWrite(releLampada, LOW);
+  //Inicializa comunicação Serial
+  Serial.begin(9600);  
   //Mantem rele desligado assim que iniciar o programa
   digitalWrite(releLampada, LOW);
 }

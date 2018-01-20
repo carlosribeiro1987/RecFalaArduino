@@ -8,7 +8,9 @@ using System.Speech.Synthesis;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using PrevisaoTempoINPE;
+using System.Diagnostics;
+using System.Threading;
 
 namespace RecFalaArduino {
 
@@ -19,9 +21,11 @@ namespace RecFalaArduino {
         public static Funcao FuncaoAtiva = Funcao.Nenhuma;
         public static ConsoleColor CorFundoConsole = Console.BackgroundColor;
         public static ConsoleColor CorFonteConsole = Console.ForegroundColor;
+        const int codigoLocalidade = 837; //Utilizado na previsão do tempo
         // bool Ouvindo = false;
         static void Main(string[] args) {
             bool PodeFechar = false;
+
             #region INICIANDO O PROGRAMA          
             Application.SetCompatibleTextRenderingDefault(false);
             Application.EnableVisualStyles();
@@ -75,6 +79,17 @@ namespace RecFalaArduino {
 
             #endregion RESULTADOS DAS LOTERIAS
 
+            #region PREVISÃO DO TEMPO           
+
+            Choices c_prev_tempo = new Choices(MinhasOrdens.PrevisaoTempo);
+            GrammarBuilder gb_prev_tempo = new GrammarBuilder();
+            gb_prev_tempo.Append(c_prev_tempo);
+            Grammar g_prev_tempo = new Grammar(gb_prev_tempo);
+            g_prev_tempo.Name = "grammarPrevisaoTempo";
+
+            #endregion PREVISÃO DO TEMPO
+
+
             #region CONFIRMAR COMANDO
 
 
@@ -90,17 +105,20 @@ namespace RecFalaArduino {
             #endregion PREPARANDO RECONHECIMENTO DE FALA
 
             #region CARREGAR GRAMMAR
-          //  Console.Write("\t#############");
+            //  Console.Write("\t#############");
             engineVoz.LoadGrammar(g_conversas);
-        //    Console.Write("#############");
+            //    Console.Write("#############");
             engineVoz.LoadGrammar(g_comandosSistema);
-        //    Console.Write("#############");
+            //    Console.Write("#############");
             engineVoz.LoadGrammar(g_comandosArduino);
-        //    Console.Write("#############");
+            //    Console.Write("#############");
             engineVoz.LoadGrammar(g_loterias);
-       //     Console.Write("#############");
+
+            //  Console.Write("\t#############");
+            engineVoz.LoadGrammar(g_prev_tempo);
+            //     Console.Write("#############");
             engineVoz.LoadGrammar(g_confirmar);
-        //    Console.Write("#############\n\n");
+            //    Console.Write("#############\n\n");
 
             #endregion CARREGAR GRAMMAR
 
@@ -112,7 +130,7 @@ namespace RecFalaArduino {
                 engineVoz.SpeechRecognized += ReconhecerVoz;
                 engineVoz.RecognizeAsync(RecognizeMode.Multiple);
                 Falar("Olá mestre, estou aqui para serví-lo. O que deseja?");
-                Console.WriteLine("\n\n\tEstou ouvindo. O que deseja?");
+                LimparConsole();
 
 
 
@@ -121,6 +139,11 @@ namespace RecFalaArduino {
 
         }
 
+        /// <summary>
+        /// Reconhece os comandos de voz envidos à engine de reconhecimento de voz.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void ReconhecerVoz(object sender, SpeechRecognizedEventArgs e) {
             if (e.Result.Confidence >= 0.4F) {
                 string OrdemFalada = e.Result.Text;
@@ -146,6 +169,11 @@ namespace RecFalaArduino {
                         FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
                         ProcessarLoteria(OrdemFalada);
                         break;
+                    case "grammarPrevisaoTempo":
+                        FraseColorida("\n\t[PREVISÃO DO TEMPO] ", ConsoleColor.DarkGreen);
+                        FraseColorida(string.Format(" Minha Ordem: \"{0}\".\t[Confiança: {1}]\n", OrdemFalada, Confianca), ConsoleColor.DarkGreen);
+                        ProcessarPrevTempo(OrdemFalada);
+                        break;
                     case "grammarConfirmar":
                         if (e.Result.Confidence > 0.7) {
                             FraseColorida("\n\t[ CONFIRMAÇÃO ]", ConsoleColor.DarkGreen);
@@ -164,7 +192,10 @@ namespace RecFalaArduino {
         }
 
         #endregion RECONHECIMENTO DE FALA
-
+        /// <summary>
+        /// Processamento dos comandos que manipulam o computador.
+        /// </summary>
+        /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarComandoPC(string Ordem) {
             switch (Ordem) {
                 case "Que horas são":
@@ -179,7 +210,14 @@ namespace RecFalaArduino {
                 case "Desligue o PC":
                     FuncaoAtiva = Funcao.DesligarPC;
                     Falar("Tem certeza que quer desligar o computador?");
-                    FraseColorida("DESLIGAR O COMPUTADOR?", ConsoleColor.Red, ConsoleColor.Yellow);
+                    FraseColorida("\n\t", ConsoleColor.Green, ConsoleColor.Black);
+                    FraseColorida("DESLIGAR O COMPUTADOR?\n", ConsoleColor.Red, ConsoleColor.Yellow);
+                    break;
+                case "Cancelar Desligamento":
+                case "Não quero mais desligar o PC":
+                case "Não Desligar":
+                    CancelarDesligamento();
+                    Falar("Desligamento do computador cancelado.");
                     break;
                 case "Sair":
                     FuncaoAtiva = Funcao.FecharAssistente;
@@ -190,11 +228,11 @@ namespace RecFalaArduino {
                 case "Feche a janela":
                 case "Fechar janela":
                     FuncaoAtiva = Funcao.FecharJanela;
-                    Falar("Tem certeza que deseja fechar a janela " + Funcoes.TituloJanelaAtiva()+"?");                   
+                    Falar("Tem certeza que deseja fechar a janela " + Funcoes.TituloJanelaAtiva() + "?");
                     break;
                 case "Qual é a janela ativa":
-                    Console.Write("\n\tJanela Ativa: " + Funcoes.TituloJanelaAtiva()+"\n");
-                    Falar("A janela ativa é: "+Funcoes.TituloJanelaAtiva());
+                    Console.Write("\n\tJanela Ativa: " + Funcoes.TituloJanelaAtiva() + "\n");
+                    Falar("A janela ativa é: " + Funcoes.TituloJanelaAtiva());
                     break;
                 case "Abrir Bloco de Notas":
                     Funcoes.AbrirPrograma("notepad.exe");
@@ -204,6 +242,9 @@ namespace RecFalaArduino {
                     break;
                 case "Limpar Janela":
                 case "Limpar Mensagens":
+                case "Limpar Tela":
+                case "Limpar a Tela":
+                case "Limpar Console":
                     LimparConsole();
                     break;
                 default:
@@ -212,19 +253,24 @@ namespace RecFalaArduino {
             }
         }
 
+        /// <summary>
+        /// Processamento dos comandos de conversas
+        /// </summary>
+        /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarConversa(string Ordem) {
             switch (Ordem) {
                 case "Cala a boca":
                 case "Cale a boca":
                 case "Cala boca":
-                    Falar("Desculpe mestre! Não quis incomodar.");
+                case "Silêncio":
+                    Falar("Ok. Me desculpe.");
                     break;
                 case "O que você é":
                 case "Quem é você":
                     Falar("Sou um sóftuér criado por você querido mestre. Estou aqui para obedecê-lo.");
                     break;
                 case "Como você se sente":
-                    Falar("Sentir? Sou apenas um sóftuér,  não sei o que isso significa.");
+                    Falar("O que é sentir? Sou apenas um sóftuér,  não sei o que isso significa.");
                     break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
@@ -232,6 +278,10 @@ namespace RecFalaArduino {
             }
         }
 
+        /// <summary>
+        /// Processamento dos comandos executados pelo Arduino.
+        /// </summary>
+        /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarComandoArduino(string Ordem) {
             switch (Ordem) {
                 case "acender lâmpada":
@@ -260,46 +310,57 @@ namespace RecFalaArduino {
                         Falar("Desculpe. Não foi possível apagar a lâmpada");
                     }
                     break;
+                
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
                     break;
             }
         }
-
+        /// <summary>
+        /// Processamento dos comandos para obtenção dos resultados das loterias.
+        /// </summary>
+        /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarLoteria(string Ordem) {
             switch (Ordem) {
                 //LOTOFÁCIL
                 case "Qual é o resultado da Lotofácil":
-                    FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
+                case "Fale o resultado da Lotofácil":
+                case "Me diz o resultado da Lotofácil":
+                case "Me diga o resultado da Lotofácil":
+                case "Diga-me o resultado da Lotofácil":
+                    FalarCompleto("Espere um momento. Vou conferir o resultado.");
                     FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
                     Lotofacil lotofacil = new Lotofacil();
                     if (lotofacil.ObteveResultado) {
                         string Resultado = Respostas.SeparaStrArrays(lotofacil.ResultadoArray);
-                        // Console.Write("\n\tResultado da Lotofácil:\n\t[ " + Resultado + " ]\n");
                         FraseColorida(Graficos.Caixa("LOTOFÁCIL", Respostas.SeparaStrArrays(lotofacil.ResultadoArray, 5)), ConsoleColor.Cyan);
-                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(lotofacil.Concurso)+"\n", ConsoleColor.Cyan);
-                        FraseColorida("\tData do Sorteio: " + Convert.ToString(lotofacil.DataSorteio.Date).Substring(0, 10)+"\n", ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(lotofacil.Concurso) + "\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(lotofacil.DataSorteio.Date).Substring(0, 10) + "\n", ConsoleColor.Cyan);
 
                         Falar(string.Format("Os números do último concurso da Lotofácil, sorteados {0} foram: {1}", Frases.Data(lotofacil.DataSorteio), Resultado));
                     }
                     else {
-                        FraseColorida("\nERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
+                        FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
                         Falar("Desculpe-me méstri. Não consegui acessar o resultado.");
                     }
                     break;
                 //MEGA SENA
                 case "Qual é o resultado da Mega Sena":
-                    FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
+                case "Fale o resultado da Mega Sena":
+                case "Me diz o resultado da Mega Sena":
+                case "Me diga o resultado da Mega Sena":
+                case "Diga-me o resultado da Mega Sena":
+                    FalarCompleto("Espere um momento. Vou conferir o resultado.");
                     FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
                     MegaSena megasena = new MegaSena();
                     if (megasena.ObteveResultado) {
                         string Resultado = Respostas.SeparaStrArrays(megasena.ResultadoArray);
                         FraseColorida(Graficos.Caixa("MEGA SENA", Respostas.SeparaStrArrays(megasena.ResultadoArray, 6)), ConsoleColor.Cyan);
-                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(megasena.Concurso)+"\n", ConsoleColor.Cyan);
-                        FraseColorida("\tData do Sorteio: " + Convert.ToString(megasena.DataSorteio).Substring(0, 10)+"\n", ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(megasena.Concurso) + "\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(megasena.DataSorteio).Substring(0, 10) + "\n", ConsoleColor.Cyan);
                         Falar(string.Format("Os números do último concurso da Mega-Sena, sorteados {0} foram: {1}", Frases.Data(megasena.DataSorteio), Resultado));
-                        
-                        
+
+
                     }
                     else {
                         FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
@@ -307,43 +368,422 @@ namespace RecFalaArduino {
 
                     }
                     break;
-                //case "Qual é o resultado da Lotomania":
-                //case "Fale o resultado da Lotomania":
-                //case "Me diz o resultado da Lotomania":
-                //case "Me diga o resultado da Lotomania":
-                //case "Diga-me o resultado da Lotomania":
-                //    FalarCompleto("Espere um momento mestre. Vou conferir o resultado.");
-                //    Console.Write("\n\t[ AVISO ] Tentando conexão com o site da Caixa...\n");
-                //    LotoMania lotomania = new LotoMania();
-                //    if (lotomania.ObteveResultado) {
-                //        string Resultado = Respostas.SeparaStrArrays(lotomania.ResultadoArray);
-                //        Console.Write(Graficos.Caixa("LOTOMANIA", Respostas.SeparaStrArrays(lotomania.ResultadoArray, 5)));
-                //        Falar(string.Format("Os números do último concurso da Loto Mania, sorteados {0} foram: {1}", Frases.Data(lotomania.DataSorteio), Resultado));
+                //LOTOMANIA
+                case "Qual é o resultado da Lotomania":
+                case "Fale o resultado da Lotomania":
+                case "Me diz o resultado da Lotomania":
+                case "Me diga o resultado da Lotomania":
+                case "Diga-me o resultado da Lotomania":
+                    FalarCompleto("Espere um momento. Vou conferir o resultado.");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
+                    LotoMania lotomania = new LotoMania();
+                    if (lotomania.ObteveResultado) {
+                        string Resultado = Respostas.SeparaStrArrays(lotomania.ResultadoArray);
+                       FraseColorida(Graficos.Caixa("LOTOMANIA", Respostas.SeparaStrArrays(lotomania.ResultadoArray, 5)), ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(lotomania.Concurso)+"\n",ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(lotomania.DataSorteio.Date).Substring(0, 10)+"\n", ConsoleColor.Cyan);
+                        Falar(string.Format("Os números do último concurso da Loto Mania, sorteados {0} foram: {1}", Frases.Data(lotomania.DataSorteio), Resultado));
+                    }
+                    else {
+                        FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
+                        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
 
-                //        Console.WriteLine("\tNúmero do Concurso: " + Convert.ToString(lotomania.Concurso));
-                //        Console.WriteLine("\tData do Sorteio: " + Convert.ToString(lotomania.DataSorteio.Date));
-                //    }
-                //    else {
-                //        Console.WriteLine("\n\t[ ERRO ] Não foi possível acessar o site da Caixa.");
-                //        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
+                    }
+                    break;
+                //QUINA
+                case "Qual é o resultado da Quina":
+                case "Fale o resultado da Quina":
+                case "Me diz o resultado da Quina":
+                case "Me diga o resultado da Quina":
+                case "Diga-me o resultado da Quina":
+                    FalarCompleto("Espere um momento. Vou conferir o resultado.");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
+                    Quina quina = new Quina();
+                    if (quina.ObteveResultado) {
+                        string Resultado = Respostas.SeparaStrArrays(quina.ResultadoArray);
+                        FraseColorida(Graficos.Caixa("QUINA", Respostas.SeparaStrArrays(quina.ResultadoArray, 5)), ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(quina.Concurso) + "\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(quina.DataSorteio.Date).Substring(0, 10) + "\n", ConsoleColor.Cyan);
+                        Falar(string.Format("Os números do último concurso da Quina, sorteados {0} foram: {1}", Frases.Data(quina.DataSorteio), Resultado));
+                    }
+                    else {
+                        FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
+                        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
 
-                //    }
-                //    break;
+                    }
+                    break;
+                //DUPLA-SENA
+                case "Qual é o resultado da Dupla Sena":
+                case "Fale o resultado da Dupla Sena":
+                case "Me diz o resultado da Dupla Sena":
+                case "Me diga o resultado da Dupla Sena":
+                case "Diga-me o resultado da Dupla Sena":
+                    FalarCompleto("Espere um momento. Vou conferir o resultado.");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site da Caixa...\n", ConsoleColor.Yellow);
+                    DuplaSena duplasena = new DuplaSena();
+                    if (duplasena.ObteveResultado) {
+                        string Resultado1 = Respostas.SeparaStrArrays(duplasena.PrimeiroSorteioArray);
+                        string Resultado2 = Respostas.SeparaStrArrays(duplasena.SegundoSorteioArray);
+                        FraseColorida(Graficos.Caixa("DUPLA-SENA 1º Sorteio", Respostas.SeparaStrArrays(duplasena.PrimeiroSorteioArray, 6)), ConsoleColor.Cyan);
+                        FraseColorida(Graficos.Caixa("DUPLA-SENA 2º Sorteio", Respostas.SeparaStrArrays(duplasena.SegundoSorteioArray, 6)), ConsoleColor.Cyan);
+                        FraseColorida("\tNúmero do Concurso: " + Convert.ToString(duplasena.Concurso) + "\n", ConsoleColor.Cyan);
+                        FraseColorida("\tData do Sorteio: " + Convert.ToString(duplasena.DataSorteio.Date).Substring(0, 10) + "\n", ConsoleColor.Cyan);
+                        Falar(string.Format("Os números do último concurso da Dupla-Sena, sorteados {0} foram: Primeiro sorteio: {1}. Segundo sorteio: {2}", Frases.Data(duplasena.DataSorteio), Resultado1, Resultado2));
+                    }
+                    else {
+                        FraseColorida("\n\tERRO: Não foi possível acessar o site da Caixa.", ConsoleColor.Red);
+                        Falar("Desculpe-me mestre. Não consegui acessar o resultado.");
+
+                    }
+                    break;
+
+
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido méstrih?");
                     break;
             }
         }
+        /// <summary>
+        /// Processamento dos comandos para obtenção da previsão do tempo.
+        /// </summary>
+        /// <param name="Ordem">O comando recebido.</param>
+        public static void ProcessarPrevTempo(string Ordem) {
+            
+            string strPrev;
+            switch (Ordem) {
+                //AMANHÃ
+                case "Qual é a previsão do tempo de amanhã":
+                case "Qual a previsão do tempo amanhã":
+                case "Qual a previsão do tempo para amanha":
+                    //Falar("Espere um momento. Vou conferir.");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        if (prev.ObtevePrevisao) {
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == DateTime.Now.Date.AddDays(1)) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - "+ prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade + "-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para amanhã em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //DEPOIS DE AMANHÃ
+                case "Qual é a previsão do tempo de depois de amanhã":
+                case "Qual a previsão do tempo depois de amanhã":
+                case "Qual a previsão do tempo para depois de amanha":
+                    //Falar("Espere um momento. Vou conferir.");
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        if (prev.ObtevePrevisao) {
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == DateTime.Now.Date.AddDays(2)) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para depois de amanhã em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //DOMINGO
+                case "Qual é a previsão do tempo de domingo":
+                case "Qual a previsão do tempo domingo":
+                case "Qual a previsão do tempo para domingo":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {                                
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Sunday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para o próximo domingo");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }) ,ConsoleColor.DarkCyan);                                
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para domingo em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+
+                //SEGUNDA-FEIRA
+                case "Qual a previsão do tempo segunda-feira":
+                case "Qual a previsão do tempo para segunda-feira":
+                case "Qual é a previsão do tempo de segunda":
+                case "Qual a previsão do tempo segunda":
+                case "Qual a previsão do tempo para segunda":
+                case "Qual é a previsão do tempo de segunda-feira":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Monday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para a próxima segunda-feira");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) { 
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para segunda-feira em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //TERÇA-FEIRA
+                case "Qual é a previsão do tempo de terça-feira":
+                case "Qual a previsão do tempo terça-feira":
+                case "Qual a previsão do tempo para terça-feira":
+                case "Qual é a previsão do tempo de terça":
+                case "Qual a previsão do tempo terça":
+                case "Qual a previsão do tempo para terça":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Tuesday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para a próxima terça-feira");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para terça-feira em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //QUARTA-FEIRA
+
+                case "Qual é a previsão do tempo de quarta-feira":
+                case "Qual a previsão do tempo quarta-feira":
+                case "Qual a previsão do tempo para quarta-feira":
+                case "Qual é a previsão do tempo de quarta":
+                case "Qual a previsão do tempo quarta":
+                case "Qual a previsão do tempo para quarta":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Wednesday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para a próxima quarta-feira");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para quarta-feira em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //QUINTA-FEIRA
+                case "Qual é a previsão do tempo de quinta-feira":
+                case "Qual a previsão do tempo quinta-feira":
+                case "Qual a previsão do tempo para quinta-feira":
+                case "Qual é a previsão do tempo de quinta":
+                case "Qual a previsão do tempo quinta":
+                case "Qual a previsão do tempo para quinta":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Thursday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para a próxima quinta-feira");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo quinta-feira em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+                //SEXTA-FEIRA
+                case "Qual é a previsão do tempo de sexta-feira":
+                case "Qual a previsão do tempo sexta-feira":
+                case "Qual a previsão do tempo para sexta-feira":
+                case "Qual é a previsão do tempo de sexta":
+                case "Qual a previsão do tempo sexta":
+                case "Qual a previsão do tempo para sexta":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site do INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Friday) && (count < 7));
+                            if (count >= 7) {
+                                Falar("Ainda não há previsão do tempo para a próxima sexta-feira.");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para sexta-feira em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.\n", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.");
+                        }
+                    }
+                    break;
+
+                //SÁBADO
+                case "Qual a previsão do tempo sábado":
+                case "Qual é a previsão do tempo de sábado":
+                case "Qual a previsão do tempo para sábado":
+                    FraseColorida("\n\tAVISO: Tentando conexão com o site ddo INPE...\n", ConsoleColor.Yellow);
+                    using (PrevisaoSeteDias prev = new PrevisaoSeteDias(codigoLocalidade)) {
+                        DateTime data = DateTime.Now.Date;
+                        if (prev.ObtevePrevisao) {
+                            int count = 0;
+                            do {
+                                data = data.AddDays(1);
+                                count++;
+                            } while ((data.DayOfWeek != DayOfWeek.Saturday) && (count < 7));
+                            if(count >= 7) {
+                                Falar("Ainda não há previsão do tempo para o próximo sábado");
+                                FraseColorida(Graficos.Caixa(new string[] { "AINDA NÃO HÁ PREVISÃO DO TEMPO PARA ESTA DATA." }), ConsoleColor.DarkCyan);
+                                break;
+                            }
+                            for (int i = 0; i < prev.TempoPrevisto.Length; i++) {
+                                if (prev.DataPrevisao[i].Date == data) {
+                                    strPrev = prev.TempoPrevisto[i];
+                                    FraseColorida(Graficos.Caixa("PREVISÂO DO TEMPO - " + prev.DataPrevisao[i].Date.ToShortDateString(), new string[] { prev.Cidade + "-" + prev.Estado, " ", " ", strPrev.ToUpper() }), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\tPrevisão do tempo para " + prev.Cidade +"-"+prev.Estado+ " dia " + prev.DataPrevisao[i].Date.ToShortDateString(), ConsoleColor.DarkCyan);
+                                    //FraseColorida("\n\t" + strPrev.ToUpper(), ConsoleColor.DarkCyan);
+                                    Console.WriteLine("\n\t");
+                                    Falar("A previsão do tempo para sábado em " + prev.Cidade + " é de " + strPrev);
+                                }
+                            }
+                        }
+                        else {
+                            FraseColorida("\n\tERRO: Não foi possível acessar o site do INPE.", ConsoleColor.Red);
+                            Falar("Desculpe-me mestre. Não consegui acessar a previsão do tempo.\n");
+                        }
+                    }
+                    break;
+            }
+        }
+
+
+        /// <summary>
+        /// Processamendo da confirmação de comandos.
+        /// </summary>
+        /// <param name="Ordem">O comando recebido</param>
         public static void ProcessarConfirmacao(string Ordem) {
             switch (Ordem) {
                 case "Sim":
                 case "Tenho":
-                case "Pode Fechar":
+                case "Pode":
                 case "Ok":
                     switch (FuncaoAtiva) {
                         case Funcao.DesligarPC:
-                            Falar("Entendi. Vou desligar o computador.");
-                            //Implementar função para desligar
+                            FalarCompleto("Entendi. Vou desligar o computador.");
+                            DesligarPC();
                             break;
                         case Funcao.FecharAssistente:
                             FalarCompleto("Ok. Até mais mestre, foi uma honra serví-lo.");
@@ -352,7 +792,7 @@ namespace RecFalaArduino {
                         case Funcao.FecharJanela:
                             string janAtiva = Funcoes.TituloJanelaAtiva();
                             if (Funcoes.FecharJanela()) {
-                                FraseColorida("\n\tJanela Fechada: " + janAtiva, ConsoleColor.DarkYellow);
+                                FraseColorida("\n\tJanela Fechada: " + janAtiva +"\n\n\t", ConsoleColor.DarkYellow);
                                 Falar("Janela Fechada");
                                 FuncaoAtiva = Funcao.Nenhuma;
                             }
@@ -392,22 +832,35 @@ namespace RecFalaArduino {
             }
         }
 
-        //Fala a frase, mas pode ser interrompido
+        /// <summary>
+        /// Fala o texto de forma assíncrona. Pode ser interrompido.
+        /// </summary>
+        /// <param name="Texto">O texto a ser falado</param>
         private static void Falar(string Texto) {
             synthVoz.SpeakAsyncCancelAll();
             synthVoz.SpeakAsync(Texto);
         }
 
-        //Fala a frase até o final
+        /// <summary>
+        /// Fala o texto de forma síncrona. Não pode ser interrompido.
+        /// </summary>
+        /// <param name="Texto">O texto a ser falado</param>
         private static void FalarCompleto(string Texto) {
             synthVoz.SpeakAsyncCancelAll();
             synthVoz.Speak(Texto);
         }
 
+
         private static void AbrirJanela(Form Janela) {
             Application.Run(Janela);
         }
 
+        /// <summary>
+        /// Exibe a frase com as cores especificadas
+        /// </summary>
+        /// <param name="Frase">O texto a ser colorido.</param>
+        /// <param name="CorLetra">A cor do texto. Padrão: Verde.</param>
+        /// <param name="CorFundo">A cor de fundo do texto. Padrão: Preto.</param>
         private static void FraseColorida(string Frase, ConsoleColor CorLetra = ConsoleColor.Green, ConsoleColor CorFundo = ConsoleColor.Black) {
             ConsoleColor CorLetraTemp = Console.ForegroundColor;
             ConsoleColor CorFundoTemp = Console.BackgroundColor;
@@ -419,9 +872,39 @@ namespace RecFalaArduino {
 
         }
 
+        /// <summary>
+        /// Limpa a janela do console.
+        /// </summary>
         private static void LimparConsole() {
             Console.Clear();
             Console.Write(Graficos.Caixa(new string[] { "RECONHECIMENTO DE FALA" }, 100));
+            Console.WriteLine("\n\n\tEstou ouvindo. O que deseja?\n\t");
+        }
+
+        /// <summary>
+        /// Executa o comando para desligamento do computador.
+        /// </summary>
+        /// <param name="tempo">O tempo de espera em segundos antes de desligar o computador (Padrão: 30 segundos). Útil caso seja necessário cancelar o desligamento.</param>
+        /// <param name="mensagem">A mensagem de desligamento. Exibida pelo Windows em uma caixa de mensagem.</param>
+        private static void DesligarPC(int tempo = 30, string mensagem = "Desligamento iniciado pelo Assistente Virtual") {
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = "shutdown";
+            startInfo.Arguments = string.Format("-s -t {0} -c \"{1}\"", tempo, mensagem);
+            Process.Start(startInfo);
+        }
+
+        /// <summary>
+        /// Cancela o desligamento do computador.
+        /// </summary>
+        private static void CancelarDesligamento() {
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = "shutdown";
+            startInfo.Arguments = "-a";
+            Process.Start(startInfo);
         }
     }
 }
