@@ -15,6 +15,8 @@ using System.Threading;
 namespace RecFalaArduino {
 
     class ReconhecimendoFalaArduino {
+       // System.Threading.Timer tmrArduino = new System.Threading.Timer(Arduino.LerSerial, null, 0, 1000);
+
         private static SpeechRecognitionEngine engineVoz = new SpeechRecognitionEngine();
         private static SpeechSynthesizer synthVoz = new SpeechSynthesizer();
         public enum Funcao { Nenhuma, DesligarPC, FecharAssistente, FecharJanela };
@@ -25,11 +27,12 @@ namespace RecFalaArduino {
         // bool Ouvindo = false;
         static void Main(string[] args) {
             bool PodeFechar = false;
-
             #region INICIANDO O PROGRAMA          
+            
             Application.SetCompatibleTextRenderingDefault(false);
             Application.EnableVisualStyles();
-
+            Console.SetWindowSize(120, 60);
+            Console.ForegroundColor = ConsoleColor.Green;
             engineVoz = new SpeechRecognitionEngine(new System.Globalization.CultureInfo("pt-BR"));
             engineVoz.SetInputToDefaultAudioDevice();
             Console.Title = "Reconhecimento de Fala + Controle Arduino por voz - Carlos Ribeiro";
@@ -272,6 +275,9 @@ namespace RecFalaArduino {
                 case "Como você se sente":
                     Falar("O que é sentir? Sou apenas um sóftuér,  não sei o que isso significa.");
                     break;
+                case "Buceta":
+                    Falar("Também quero meu chapa.");
+                    break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
                     break;
@@ -283,6 +289,7 @@ namespace RecFalaArduino {
         /// </summary>
         /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarComandoArduino(string Ordem) {
+            Arduino arduino = new Arduino(4);
             switch (Ordem) {
                 case "acender lâmpada":
                 case "acender luz":
@@ -290,10 +297,11 @@ namespace RecFalaArduino {
                 case "ligue a lâmpada":
                 case "acenda a luz":
                 case "ligue a luz":
-                    if (Arduino.EnviarComando("L"))
+                    if (arduino.EnviarComando("L"))
                         Falar("Lâmpada acesa.");
                     else {
-                        FraseColorida("\n\tERRO: Não Foi possível acessar o Arduino. Verifique a conexão.", ConsoleColor.Red);
+                        FraseColorida(string.Format("\n\tERRO: Não Foi possível acessar o Arduino na porta {0}. Verifique a conexão.\n", arduino.PortaCOM), ConsoleColor.Red);
+                        FraseColorida(Graficos.Caixa("Portas COM Ativas", arduino.PortasCOMAtivas), ConsoleColor.DarkRed);
                         Falar("Desculpe. Não foi possível acender a lâmpada");
                     }
                     break;
@@ -303,7 +311,7 @@ namespace RecFalaArduino {
                 case "desligue a lâmpada":
                 case "apague a luz":
                 case "desligue a luz":
-                    if (Arduino.EnviarComando("D"))
+                    if (arduino.EnviarComando("D"))
                         Falar("Lâmpada apagada.");
                     else {
                         FraseColorida("\n\tERRO: Não Foi possível acessar o Arduino. Verifique a conexão.", ConsoleColor.Red);

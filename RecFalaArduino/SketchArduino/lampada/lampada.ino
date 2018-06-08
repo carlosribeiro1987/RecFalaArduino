@@ -29,6 +29,7 @@ void loop()
       igual a 'l' ou 'L' ela Liga rele */
     else if (leitura == 'l' || leitura == 'L') {
       digitalWrite(releLampada, HIGH);
+	  
     }
     Serial.println(leitura);
   }
