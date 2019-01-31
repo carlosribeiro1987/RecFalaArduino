@@ -289,7 +289,7 @@ namespace RecFalaArduino {
         /// </summary>
         /// <param name="Ordem">O comando recebido.</param>
         public static void ProcessarComandoArduino(string Ordem) {
-            Arduino arduino = new Arduino(4);
+            Arduino arduino = new Arduino(3);
             switch (Ordem) {
                 case "acender lâmpada":
                 case "acender luz":
