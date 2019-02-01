@@ -275,9 +275,6 @@ namespace RecFalaArduino {
                 case "Como você se sente":
                     Falar("O que é sentir? Sou apenas um sóftuér,  não sei o que isso significa.");
                     break;
-                case "Buceta":
-                    Falar("Também quero meu chapa.");
-                    break;
                 default:
                     Falar("Desculpe-me, não entendi. Podes repetir querido mestre?");
                     break;
