@@ -195,6 +195,9 @@ namespace RecFalaArduino {
         }
 
         #endregion RECONHECIMENTO DE FALA
+
+
+        #region Comandos de controle do computador
         /// <summary>
         /// Processamento dos comandos que manipulam o computador.
         /// </summary>
@@ -255,7 +258,9 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Comandos de controle do computador
 
+        #region Comandos de conversas
         /// <summary>
         /// Processamento dos comandos de conversas
         /// </summary>
@@ -280,7 +285,9 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Comandos de conversas
 
+        #region Comandos executados pelo Arduino
         /// <summary>
         /// Processamento dos comandos executados pelo Arduino.
         /// </summary>
@@ -321,6 +328,10 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Comandos executados pelo Arduino
+
+
+        #region Comandos para resultados das loterias
         /// <summary>
         /// Processamento dos comandos para obtenção dos resultados das loterias.
         /// </summary>
@@ -448,6 +459,9 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Comandos para resultados das loterias
+
+        #region Comandos para previsão do tempo
         /// <summary>
         /// Processamento dos comandos para obtenção da previsão do tempo.
         /// </summary>
@@ -773,8 +787,9 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Comandos para previsão do tempo
 
-
+        #region Confirmar execução de comandos
         /// <summary>
         /// Processamendo da confirmação de comandos.
         /// </summary>
@@ -836,6 +851,8 @@ namespace RecFalaArduino {
                     break;
             }
         }
+        #endregion Confirmar execução de comandos
+
 
         /// <summary>
         /// Fala o texto de forma assíncrona. Pode ser interrompido.
