@@ -5,7 +5,8 @@ Esse projeto está sendo desenvolvido com fins de aprendizado e testes das class
 ### Características do Projeto:
 * A intenção foi obter um "assistente virtual" com funcionalidades básicas que poderão ser melhoradas ou acrescentadas futuramente.
 * Foi implementado um comando para acender e apagar uma lâmpada usando o Arduino.O sketch utilizado está incluso no diretório [SketchArduino](https://github.com/carlosribeiro1987/RecFalaArduino/tree/master/RecFalaArduino/SketchArduino). 
-* Foram utilizadas classes criadas por mim para a obtenção dos resultados das Loterias, que podem ser encontradas [aqui](https://github.com/carlosribeiro1987/ResultadoLoteriasCaixa-CSharp).
+* Foi utilizada uma class library criada por mim para a obtenção dos resultados das Loterias, que pode ser encontrada [**neste link**](https://github.com/carlosribeiro1987/ResultadoLoteriasCaixa-CSharp).
+* Em 20/01/2018, foi adicionada funcionalidade de previsão do tempo (obtida no site do INPE) através de uma classlibrary criada por mim, que pode ser encontrada [**neste link**](https://github.com/carlosribeiro1987/PrevisaoTempoINPE).
 
 Futuras modificações serão adicionadas a este repositório.
 
